@@ -29,13 +29,9 @@ func main() {
 
 	for i := 1; i <= 3; i++ {
 		p := Payload{ID: i, Text: " rawdata "}
-
 		cRes := clean(p)
-
 		vRes := validate(p)
-
 		finalStr := transform(cRes, vRes)
-
 		fmt.Println(">>> result:", finalStr)
 	}
 

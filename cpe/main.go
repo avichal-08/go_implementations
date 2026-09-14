@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -33,14 +34,39 @@ func main() {
 	outputCh := make(chan string)
 
 	go splitter(inputCh, cleanInCh, validateInCh)
-	go cleaner(cleanInCh, cleanOutCh)
-	go validator(validateInCh, validateOutCh)
+
+	var cleanWg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		cleanWg.Add(1)
+		go func() {
+			defer cleanWg.Done()
+			cleaner(cleanInCh, cleanOutCh)
+		}()
+	}
+	go func() {
+		cleanWg.Wait()
+		close(cleanOutCh)
+	}()
+
+	var valWg sync.WaitGroup
+	for i := 0; i < 3; i++ {
+		valWg.Add(1)
+		go func() {
+			defer valWg.Done()
+			validator(validateInCh, validateOutCh)
+		}()
+	}
+	go func() {
+		valWg.Wait()
+		close(validateOutCh)
+	}()
+
 	go transformer(cleanOutCh, validateOutCh, outputCh)
 
 	start := time.Now()
 
 	go func() {
-		for i := 1; i <= 3; i++ {
+		for i := 1; i <= 6; i++ {
 			inputCh <- Payload{ID: i, Text: " rawdata "}
 		}
 		close(inputCh)
@@ -49,7 +75,7 @@ func main() {
 	for result := range outputCh {
 		fmt.Println(">>> result:", result)
 	}
-	fmt.Printf("concurrent pipeline finished successfully in %v\n", time.Since(start))
+	fmt.Printf("concurrent pool pipeline finished successfully in %v\n", time.Since(start))
 }
 
 func splitter(in <-chan Payload, out1, out2 chan<- Payload) {
@@ -69,7 +95,6 @@ func cleaner(in <-chan Payload, out chan<- CleanResult) {
 		out <- CleanResult{ID: p.ID, Cleaned: p.Text + "[cleaned]"}
 		log("cleaner", p.ID, "finished")
 	}
-	close(out)
 }
 
 func validator(in <-chan Payload, out chan<- ValidateResult) {
@@ -79,7 +104,6 @@ func validator(in <-chan Payload, out chan<- ValidateResult) {
 		out <- ValidateResult{ID: p.ID, IsValid: true}
 		log("validator", p.ID, "finished")
 	}
-	close(out)
 }
 
 func transformer(cleanIn <-chan CleanResult, valIn <-chan ValidateResult, out chan<- string) {

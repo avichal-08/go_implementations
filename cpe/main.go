@@ -36,7 +36,7 @@ func main() {
 	go splitter(inputCh, cleanInCh, validateInCh)
 
 	var cleanWg sync.WaitGroup
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		cleanWg.Add(1)
 		go func() {
 			defer cleanWg.Done()
@@ -49,7 +49,7 @@ func main() {
 	}()
 
 	var valWg sync.WaitGroup
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		valWg.Add(1)
 		go func() {
 			defer valWg.Done()

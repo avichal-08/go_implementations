@@ -66,7 +66,7 @@ func main() {
 	start := time.Now()
 
 	go func() {
-		for i := 1; i <= 6; i++ {
+		for i := 1; i <= 3; i++ {
 			inputCh <- Payload{ID: i, Text: " rawdata "}
 		}
 		close(inputCh)

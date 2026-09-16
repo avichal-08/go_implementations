@@ -7,7 +7,6 @@ import (
 
 func main() {
 	limiter := NewRateLimiter(5, 10)
-	defer limiter.Stop()
 
 	fmt.Println("sending initial burst of 15 requests")
 	for i := 1; i <= 15; i++ {

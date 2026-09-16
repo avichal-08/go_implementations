@@ -6,48 +6,37 @@ import (
 )
 
 type RateLimiter struct {
-	mu       sync.Mutex
-	capacity float64
-	tokens   float64
-	stopCh   chan struct{}
+	mu         sync.Mutex
+	rate       float64
+	capacity   float64
+	tokens     float64
+	lastUpdate time.Time
 }
 
 func NewRateLimiter(rate float64, burst int) *RateLimiter {
-	rl := &RateLimiter{
-		capacity: float64(burst),
-		tokens:   float64(burst),
-		stopCh:   make(chan struct{}),
+	return &RateLimiter{
+		rate:       rate,
+		capacity:   float64(burst),
+		tokens:     float64(burst),
+		lastUpdate: time.Now(),
 	}
-
-	interval := time.Duration(float64(time.Second) / rate)
-	ticker := time.NewTicker(interval)
-
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				rl.mu.Lock()
-				if rl.tokens < rl.capacity {
-					rl.tokens++
-				}
-				rl.mu.Unlock()
-			case <-rl.stopCh:
-				ticker.Stop()
-				return
-			}
-		}
-	}()
-
-	return rl
-}
-
-func (rl *RateLimiter) Stop() {
-	close(rl.stopCh)
 }
 
 func (rl *RateLimiter) Allow() bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
+
+	now := time.Now()
+
+	elapsed := now.Sub(rl.lastUpdate).Seconds()
+
+	rl.tokens += elapsed * rl.rate
+
+	if rl.tokens > rl.capacity {
+		rl.tokens = rl.capacity
+	}
+
+	rl.lastUpdate = now
 
 	if rl.tokens >= 1.0 {
 		rl.tokens--

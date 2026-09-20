@@ -1,0 +1,44 @@
+services:
+  primary:
+    image: postgres:16-alpine
+    container_name: go_primary
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - primary_data:/var/lib/postgresql/data
+
+  replica1:
+    image: postgres:16-alpine
+    container_name: go_replica1
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - replica1_data:/var/lib/postgresql/data
+
+  replica2:
+    image: postgres:16-alpine
+    container_name: go_replica2
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: mydb
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - replica2_data:/var/lib/postgresql/data
+
+volumes:
+  primary_data:
+  replica1_data:
+  replica2_data:

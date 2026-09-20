@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS test_table (
+    id SERIAL PRIMARY KEY,
+    message TEXT NOT NULL
+);

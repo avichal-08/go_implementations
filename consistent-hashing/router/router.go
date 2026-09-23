@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"consistent-hashing/ring"
 
@@ -29,6 +30,10 @@ func (r *Router) AddDatabase(shardID, connStr string) error {
 	if err != nil {
 		return err
 	}
+
+	db.SetMaxOpenConns(50)
+	db.SetMaxIdleConns(50)
+	db.SetConnMaxLifetime(30 * time.Minute)
 
 	//creates table if it doesn't exist
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT)`)

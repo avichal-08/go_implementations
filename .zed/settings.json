@@ -1,0 +1,7 @@
+{
+  "prettier": {
+    "allowed": true
+  },
+  "enable_language_server": true,
+  "show_wrap_guides": true
+}
